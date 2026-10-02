@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>🃏 Memory Match — GameZone</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0b0e1a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-theme="dark">
+<div class="gamepage">
+  <div class="gamebar">
+    <button class="btn ghost" id="backBtn">← Back</button>
+    <h2 style="margin:0">🃏 Memory Match</h2>
+    <button class="btn ghost" id="pauseBtn">⏸ Pause</button>
+  </div>
+
+  <div class="row" style="justify-content:center; margin-bottom:4px">
+    <div class="scorebox">👣 Moves: <b id="moves">0</b></div>
+    <div class="scorebox">⏱ Time: <b id="time">0</b>s</div>
+    <div class="scorebox">🏆 Best: <b id="bestLine">—</b></div>
+  </div>
+
+  <div class="mem-grid" id="grid"></div>
+
+  <!-- Start overlay (also the how-to-play) -->
+  <div id="startOverlay" class="overlay-screen">
+    <div class="overlay-card">
+      <h2>🃏 Memory Match</h2>
+      <div class="howto-body">
+        <ul>
+          <li>Tap cards to flip them and find all <b>8 pairs</b>.</li>
+          <li>Fewer moves + less time = better score.</li>
+          <li>⏸ pauses the game and the timer.</li>
+        </ul>
+      </div>
+      <button class="btn primary big" id="startBtn">▶ Start</button>
+    </div>
+  </div>
+
+  <!-- Win overlay -->
+  <div id="overOverlay" class="overlay-screen" hidden>
+    <div class="overlay-card">
+      <h2>🎉 You Win!</h2>
+      <p>👣 Moves: <b id="finalMoves">0</b> · ⏱ Time: <b id="finalTime">0</b>s</p>
+      <p>🏆 Best: <b id="finalBest">—</b> <span id="newBest" hidden>🎉 New best!</span></p>
+      <div class="row" style="justify-content:center">
+        <button class="btn primary" id="againBtn">🔄 Play Again</button>
+        <button class="btn ghost" id="homeBtn">🏠 Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/sound.js"></script>
+<script>
+(function () {
+  'use strict';
+  try {
+    const s = JSON.parse(localStorage.getItem('gz_settings')) || {};
+    if (s.theme) document.body.dataset.theme = s.theme;
+  } catch {}
+
+  const EMOJI = ['🐶','🐱','🦊','🐼','🦁','🐸','🐵','🐷'];
+  const grid = document.getElementById('grid');
+
+  let deck, open, matched, moves, seconds, timer, started, paused, lock;
+
+  function getBest() { try { return JSON.parse(localStorage.getItem('gz_scores')).memory || null; } catch { return null; } }
+  function setBest(v) {
+    try {
+      const s = JSON.parse(localStorage.getItem('gz_scores')) || {};
+      s.memory = v; localStorage.setItem('gz_scores', JSON.stringify(s));
+    } catch {}
+  }
+  function bestLine() {
+    const b = getBest();
+    document.getElementById('bestLine').textContent = b ? b.moves + ' mv · ' + b.time + 's' : '—';
+  }
+
+  function reset() {
+    deck = shuffle(EMOJI.concat(EMOJI));
+    open = []; matched = 0; moves = 0; seconds = 0; paused = false; lock = false;
+    clearInterval(timer);
+    document.getElementById('moves').textContent = '0';
+    document.getElementById('time').textContent = '0';
+    document.getElementById('pauseBtn').textContent = '⏸ Pause';
+    grid.innerHTML = '';
+    deck.forEach((e, i) => {
+      const c = document.createElement('button');
+      c.className = 'mem-card'; c.dataset.i = i; c.textContent = '❓';
+      c.setAttribute('aria-label', 'card ' + (i + 1));
+      c.addEventListener('click', () => flip(c, i));
+      grid.appendChild(c);
+    });
+  }
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function start() {
+    document.getElementById('startOverlay').hidden = true;
+    document.getElementById('overOverlay').hidden = true;
+    reset(); started = true;
+    timer = setInterval(() => {
+      if (paused) return;
+      seconds++;
+      document.getElementById('time').textContent = seconds;
+    }, 1000);
+  }
+
+  function flip(card, i) {
+    if (!started || paused || lock) return;
+    if (card.classList.contains('open') || card.classList.contains('done')) return;
+    Sound.flip();
+    card.classList.add('open');
+    card.textContent = deck[i];
+    open.push({ card, i });
+    if (open.length === 2) {
+      moves++;
+      document.getElementById('moves').textContent = moves;
+      const [a, b] = open;
+      if (deck[a.i] === deck[b.i]) {
+        Sound.match();
+        a.card.classList.add('done'); b.card.classList.add('done');
+        open = []; matched += 2;
+        if (matched === deck.length) win();
+      } else {
+        lock = true;
+        setTimeout(() => {
+          a.card.classList.remove('open'); a.card.textContent = '❓';
+          b.card.classList.remove('open'); b.card.textContent = '❓';
+          open = []; lock = false;
+        }, 650);
+      }
+    }
+  }
+
+  function isBetter(b) {
+    // better = fewer moves, tie-break on faster time
+    return !b || moves < b.moves || (moves === b.moves && seconds < b.time);
+  }
+
+  function win() {
+    started = false; clearInterval(timer);
+    Sound.win();
+    const prev = getBest();
+    const better = isBetter(prev);
+    if (better) setBest({ moves, time: seconds });
+    const cur = getBest();
+    document.getElementById('finalMoves').textContent = moves;
+    document.getElementById('finalTime').textContent = seconds;
+    document.getElementById('finalBest').textContent = cur.moves + ' moves · ' + cur.time + 's';
+    document.getElementById('newBest').hidden = !better;
+    bestLine();
+    document.getElementById('overOverlay').hidden = false;
+  }
+
+  function togglePause() {
+    if (!started) return;
+    paused = !paused;
+    document.getElementById('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause';
+    Sound.click();
+  }
+
+  document.getElementById('startBtn').addEventListener('click', () => { Sound.click(); start(); });
+  document.getElementById('againBtn').addEventListener('click', () => { Sound.click(); start(); });
+  document.getElementById('homeBtn').addEventListener('click', () => location.href = '/');
+  document.getElementById('backBtn').addEventListener('click', () => location.href = '/');
+  document.getElementById('pauseBtn').addEventListener('click', togglePause);
+
+  bestLine();
+  reset();
+})();
+</script>
+</body>
+</html>

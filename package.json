@@ -1,0 +1,1 @@
+{"dependencies":{"ws":"^8.18.0"},"description":"GameZone — installable PWA game hub with 5 games, online multiplayer rooms and chat","license":"MIT","main":"server.js","name":"gamezone","scripts":{"start":"node server.js"},"version":"1.0.0"}

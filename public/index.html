@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>GameZone — 5 Games, Online Multiplayer & Chat</title>
+  <meta name="description" content="GameZone: installable game hub with Tic Tac Toe, Connect Four, Rock Paper Scissors online multiplayer, Snake and Memory Match.">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0b0e1a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GameZone">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-theme="dark">
+
+  <!-- Loading overlay -->
+  <div id="loader" class="loader" hidden>
+    <div class="spinner"></div>
+    <p>Connecting…</p>
+  </div>
+
+  <!-- Connection banner -->
+  <div id="connBanner" class="conn-banner" hidden></div>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <button id="logoBtn" class="logo" aria-label="GameZone home">🎮 <span>GameZone</span></button>
+    <nav class="mainnav">
+      <button class="navbtn active" data-view="home">🏠<span data-i18n="home">Home</span></button>
+      <button class="navbtn" data-view="lobby">🌐<span data-i18n="lobby">Online Lobby</span></button>
+      <button class="navbtn" data-view="leaderboard">🏆<span data-i18n="leaderboard">Leaderboard</span></button>
+      <button class="navbtn" data-view="profile">👤<span data-i18n="profile">Profile</span></button>
+      <button class="navbtn" data-view="settings">⚙️<span data-i18n="settings">Settings</span></button>
+    </nav>
+    <div class="topactions">
+      <button id="installBtn" class="iconbtn" hidden title="Install">📲</button>
+      <button id="soundBtn" class="iconbtn" title="Sound">🔊</button>
+      <button id="fsBtn" class="iconbtn" title="Fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HOME ============ -->
+    <section id="view-home" class="view">
+      <div class="hero">
+        <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+        <h1 class="hero-title">🎮 GameZone</h1>
+        <p class="hero-sub" data-i18n="tagline">5 games, online multiplayer &amp; chat — all in one installable app</p>
+        <button id="installBtn2" class="btn primary big" hidden>📲 <span data-i18n="installApp">Install App</span></button>
+      </div>
+
+      <h2 class="section-title" data-i18n="chooseGame">Choose a game</h2>
+      <div class="cards">
+        <article class="gcard" data-game="tictactoe">
+          <div class="gicon">❌</div>
+          <h3>Tic Tac Toe</h3>
+          <p class="gtag" data-i18n="multiplayer">Online · 2 players</p>
+          <div class="grow">
+            <button class="btn ghost btn-howto" data-i18n="howToPlay">How to play</button>
+            <button class="btn primary btn-play" data-i18n="play">Play</button>
+          </div>
+        </article>
+        <article class="gcard" data-game="connect4">
+          <div class="gicon">🔴</div>
+          <h3>Connect Four</h3>
+          <p class="gtag" data-i18n="multiplayer">Online · 2 players</p>
+          <div class="grow">
+            <button class="btn ghost btn-howto" data-i18n="howToPlay">How to play</button>
+            <button class="btn primary btn-play" data-i18n="play">Play</button>
+          </div>
+        </article>
+        <article class="gcard" data-game="rps">
+          <div class="gicon">✊</div>
+          <h3>Rock Paper Scissors</h3>
+          <p class="gtag" data-i18n="multiplayer">Online · 2 players</p>
+          <div class="grow">
+            <button class="btn ghost btn-howto" data-i18n="howToPlay">How to play</button>
+            <button class="btn primary btn-play" data-i18n="play">Play</button>
+          </div>
+        </article>
+        <article class="gcard" data-game="snake">
+          <div class="gicon">🐍</div>
+          <h3>Snake</h3>
+          <p class="gtag" data-i18n="singlePlayer">Solo · offline</p>
+          <div class="grow">
+            <button class="btn ghost btn-howto" data-i18n="howToPlay">How to play</button>
+            <button class="btn primary btn-play" data-i18n="play">Play</button>
+          </div>
+        </article>
+        <article class="gcard" data-game="memory">
+          <div class="gicon">🃏</div>
+          <h3>Memory Match</h3>
+          <p class="gtag" data-i18n="singlePlayer">Solo · offline</p>
+          <div class="grow">
+            <button class="btn ghost btn-howto" data-i18n="howToPlay">How to play</button>
+            <button class="btn primary btn-play" data-i18n="play">Play</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ LOBBY ============ -->
+    <section id="view-lobby" class="view" hidden>
+      <h2 class="section-title">🌐 <span data-i18n="lobby">Online Lobby</span></h2>
+
+      <div class="panel profile-chip">
+        <span id="chipAvatar" class="pavatar big">🎮</span>
+        <div><strong id="chipName">Player</strong><br>
+        <button class="linklike" id="editProfileBtn">✏️ <span data-i18n="profile">Profile</span></button></div>
+      </div>
+
+      <div class="panel">
+        <button id="createBtn" class="btn primary big block">➕ <span data-i18n="createRoom">Create Room</span></button>
+        <div class="joinrow">
+          <input id="joinCode" maxlength="6" placeholder="ABC123" data-i18n-ph="enterCode" autocomplete="off" autocapitalize="characters">
+          <button id="joinBtn" class="btn primary">🚪 <span data-i18n="joinRoom">Join Room</span></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>💬 <span data-i18n="lobbyChat">Lobby Chat (everyone online)</span></h3>
+        <div id="lobbyChat" class="chatbox"></div>
+        <div class="chatrow">
+          <input id="lobbyInput" maxlength="300" data-i18n-ph="typeMessage" placeholder="Type a message…" autocomplete="off">
+          <button id="lobbySend" class="btn primary"><span data-i18n="send">Send</span> ➤</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ROOM ============ -->
+    <section id="view-room" class="view" hidden>
+      <div class="panel roomhead">
+        <div>
+          <small data-i18n="roomCode">Room Code</small>
+          <div class="codebig" id="roomCode">------</div>
+        </div>
+        <div class="row">
+          <button id="copyBtn" class="btn ghost">📋 <span data-i18n="copyCode">Copy code</span></button>
+          <button id="shareBtn" class="btn ghost">🔗 <span data-i18n="share">Share</span></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>👥 <span data-i18n="players">Players</span></h3>
+        <div id="playerList" class="players"></div>
+      </div>
+
+      <div class="panel">
+        <h3>🎯 <span data-i18n="chooseGame">Choose a game</span></h3>
+        <div class="pickrow">
+          <button class="pickbtn" data-game="tictactoe">❌<small>Tic Tac Toe</small></button>
+          <button class="pickbtn" data-game="connect4">🔴<small>Connect Four</small></button>
+          <button class="pickbtn" data-game="rps">✊<small>RPS</small></button>
+        </div>
+        <p id="mpStatus" class="status"></p>
+        <div id="mpBoard" class="mpboard"></div>
+        <div id="mpActions" class="row" hidden>
+          <button id="rematchBtn" class="btn primary">🔄 <span data-i18n="rematch">Rematch</span></button>
+          <button id="leaveBtn" class="btn danger">🚪 <span data-i18n="leaveRoom">Leave Room</span></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>💬 <span data-i18n="roomChat">Room Chat</span></h3>
+        <div id="roomChat" class="chatbox"></div>
+        <div class="chatrow">
+          <input id="roomInput" maxlength="300" data-i18n-ph="typeMessage" placeholder="Type a message…" autocomplete="off">
+          <button id="roomSend" class="btn primary"><span data-i18n="send">Send</span> ➤</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LEADERBOARD ============ -->
+    <section id="view-leaderboard" class="view" hidden>
+      <h2 class="section-title">🏆 <span data-i18n="bestScores">Your Best Scores</span></h2>
+      <div class="panel">
+        <div id="lbRows"></div>
+        <p id="lbEmpty" class="muted" data-i18n="noScores">No scores yet — go play!</p>
+      </div>
+    </section>
+
+    <!-- ============ PROFILE ============ -->
+    <section id="view-profile" class="view" hidden>
+      <h2 class="section-title">👤 <span data-i18n="profile">Profile</span></h2>
+      <div class="panel center">
+        <div id="profilePreview" class="avatar-preview">🎮</div>
+        <h3 data-i18n="chooseAvatar">Choose your avatar</h3>
+        <div id="avatarGrid" class="avatar-grid"></div>
+        <label class="field"><span data-i18n="yourName">Your name</span>
+          <input id="profileName" maxlength="20" placeholder="Player" autocomplete="off">
+        </label>
+        <button id="profileSave" class="btn primary big">💾 <span data-i18n="save">Save</span></button>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section id="view-settings" class="view" hidden>
+      <h2 class="section-title">⚙️ <span data-i18n="settings">Settings</span></h2>
+      <div class="panel">
+        <div class="setrow">
+          <span>🎨 <b data-i18n="theme">Theme</b></span>
+          <div class="seg" id="setTheme">
+            <button data-val="dark" data-i18n="dark">Dark</button>
+            <button data-val="light" data-i18n="light">Light</button>
+          </div>
+        </div>
+        <div class="setrow">
+          <span>🔊 <b data-i18n="sound">Sound effects</b></span>
+          <label class="switch"><input type="checkbox" id="setSound"><i></i></label>
+        </div>
+        <div class="setrow">
+          <span>🎵 <b data-i18n="music">Background music</b></span>
+          <label class="switch"><input type="checkbox" id="setMusic"><i></i></label>
+        </div>
+        <div class="setrow">
+          <span>🌐 <b data-i18n="language">Language</b></span>
+          <select id="setLang">
+            <option value="en">English</option>
+            <option value="ur">Roman Urdu</option>
+          </select>
+        </div>
+        <div class="setrow">
+          <span>⛶ <b data-i18n="fullscreen">Fullscreen</b></span>
+          <button id="fsBtn2" class="btn ghost">⛶</button>
+        </div>
+        <div class="setrow">
+          <span>📲 <b data-i18n="installApp">Install App</b></span>
+          <button id="installBtn2b" class="btn ghost" hidden>📲</button>
+        </div>
+        <div class="setrow danger">
+          <span>🗑️ <b data-i18n="clearData">Clear saved data</b></span>
+          <button id="clearBtn" class="btn danger">🗑️</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- How to play modal -->
+  <div id="howtoModal" class="modal" hidden>
+    <div class="modal-card">
+      <h2 id="howtoTitle"></h2>
+      <div id="howtoBody" class="howto-body"></div>
+      <div class="row">
+        <button id="howtoPlay" class="btn primary big">Play</button>
+        <button id="howtoClose" class="btn ghost" data-i18n="close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastBox" class="toasts"></div>
+
+  <script src="/sound.js"></script>
+  <script src="/app.js"></script>
+  <script src="/client.js"></script>
+  <script>
+    // profile edit shortcut + settings install button alias
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('editProfileBtn').addEventListener('click', () => App.showView('profile'));
+      const b2 = document.getElementById('installBtn2b');
+      if (b2) b2.addEventListener('click', () => document.getElementById('installBtn').click());
+      // keep the settings install button in sync with the header one
+      new MutationObserver(() => { b2.hidden = document.getElementById('installBtn').hidden; })
+        .observe(document.getElementById('installBtn'), { attributes: true, attributeFilter: ['hidden'] });
+    });
+  </script>
+</body>
+</html>
